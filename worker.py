@@ -30,24 +30,25 @@ def calc_lon(decimal):
 def calc_alt(alt):
     return f'{alt:.2f}', 'M'
 
+
 def calc_head(head):
     if head > 0:
         return f'{head:.2f}'
     elif head < 0:
         return f'{360 + head:.2f}'
 
+
 def to_can(lat, lon, alt):
     pass
 
-
+print("Opening connection to google earth")
 context = zmq.Context()
 receiver = context.socket(zmq.PULL)
 receiver.connect('ipc:///tmp/earth.pipe')
 
-sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-sock.bind(("0.0.0.0", 10110))
-sock.listen(1)
-conn, addr = sock.accept()
+print("Opening connection to xcsoar")
+sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+addr = ('localhost', 10110)
 
 while True:
     try:
@@ -67,19 +68,22 @@ while True:
         nmea_pos = nm.GGA('GP', 'RMC', data)
         nmea_alt = nm.GGA('PG', 'RMZ', (calc_alt(alt)))
 
-        print(nmea_pos)
-        print(nmea_alt)
         try:
+            print(nmea_pos)
+            print(nmea_alt)
             df_pos = (str(nmea_pos) + '\n').encode()
             df_alt = (str(nmea_alt) + '\n').encode()
         except Exception as e:
             print(Exception("Skipping this record"))
             continue
 
-
-        conn.send(df_pos)
-        conn.send(df_alt)
+        try:
+            sock.sendto(df_pos, addr)
+            sock.sendto(df_alt, addr)
+        except Exception as e:
+            print(Exception("Unable to send record"))
+            continue
 
     except KeyboardInterrupt:
-        conn.close()
+        sock.close()
         exit()
