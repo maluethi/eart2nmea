@@ -30,6 +30,11 @@ def calc_lon(decimal):
 def calc_alt(alt):
     return f'{alt:.2f}', 'M'
 
+def calc_head(head):
+    if head > 0:
+        return f'{head:.2f}'
+    elif head < 0:
+        return f'{360 + head:.2f}'
 
 def to_can(lat, lon, alt):
     pass
@@ -57,21 +62,23 @@ while True:
         timestamp = dt.now().strftime("%H%M%S")
         date = dt.now().strftime("%d%m%y")
 
-        data = (str(timestamp),'A', *calc_lat(lat), *calc_lon(lon), "10.0", f"{head:.2f}", date, "1.2", "E","S")
+        data = (str(timestamp),'A', *calc_lat(lat), *calc_lon(lon), "40.0", calc_head(head), date, "1.2", "E","S")
 
         nmea_pos = nm.GGA('GP', 'RMC', data)
         nmea_alt = nm.GGA('PG', 'RMZ', (calc_alt(alt)))
 
-        df = (str(nmea_pos) + '\n').encode()
-
-        print(df)
         print(nmea_pos)
         print(nmea_alt)
-        conn.send(df)
+        try:
+            df_pos = (str(nmea_pos) + '\n').encode()
+            df_alt = (str(nmea_alt) + '\n').encode()
+        except Exception as e:
+            print(Exception("Skipping this record"))
+            continue
 
-        df = (str(nmea_alt) + '\n').encode()
 
-        conn.send(df)
+        conn.send(df_pos)
+        conn.send(df_alt)
 
     except KeyboardInterrupt:
         conn.close()
