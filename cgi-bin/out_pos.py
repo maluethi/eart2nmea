@@ -78,15 +78,20 @@ data = (str(timestamp), 'A', *calc_lat(lat), *calc_lon(lon), "40.0", calc_head(h
 nmea_pos = nm.GGA('GP', 'RMC', data)
 nmea_alt = nm.GGA('PG', 'RMZ', (calc_alt(alt)))
 
+logging.debug(f"pos: {nmea_pos}")
+logging.debug(f"alt: {nmea_alt}")
+
 try:
    df_pos = (str(nmea_pos) + '\n').encode()
    df_alt = (str(nmea_alt) + '\n').encode()
 except Exception as e:
+   logging.debug(f"unable to encode alt/pos")
    raise Exception("encoding issue")
 try:
    sock.sendto(df_pos, addr)
    sock.sendto(df_alt, addr)
 except Exception as e:
+   logging.debug(f"unable to send alt/pos")
    raise Exception("sending issue")
 
 
