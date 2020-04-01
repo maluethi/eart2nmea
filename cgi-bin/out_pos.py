@@ -6,26 +6,26 @@ import math as m
 import socket
 import pynmea2 as nm
 from datetime import datetime as dt
-
+import logging
 
 def to_gm(val):
+   val = abs(val)
    hh = m.floor(val)
    mm = (val - hh) * 60
-   return hh, mm
+   val = 100 * hh + mm
+   return f'{val:>08.4f}'
 
 
 def calc_lat(decimal):
    sign = m.copysign(1, decimal)
    direction = 'N' if sign == 1 else 'S'
-   hh, mm = to_gm(abs(decimal))
-   return f'{hh}{mm:.4f}', direction
+   return to_gm(decimal), direction
 
 
 def calc_lon(decimal):
    sign = m.copysign(1, decimal)
    direction = 'E' if sign == 1 else 'W'
-   hh, mm = to_gm(abs(decimal))
-   return f'{hh:0>3}{mm:.4f}', direction
+   return to_gm(decimal), direction
 
 
 def calc_alt(alt):
@@ -38,7 +38,10 @@ def calc_head(head):
    elif head < 0:
       return f'{360 + head:.2f}'
 
+
 url = cgi.FieldStorage()
+
+logging.basicConfig(filename='cgi.log', level=logging.DEBUG)
 
 camera = url['CAMERA'].value
 camera = camera.split(',')
@@ -79,13 +82,13 @@ try:
    df_pos = (str(nmea_pos) + '\n').encode()
    df_alt = (str(nmea_alt) + '\n').encode()
 except Exception as e:
-   exit()
-
+   raise Exception("encoding issue")
 try:
    sock.sendto(df_pos, addr)
    sock.sendto(df_alt, addr)
 except Exception as e:
-   exit()
+   raise Exception("sending issue")
+
 
 print("Content-Type: application/vnd.google-earth.kml+xml\n")
 print(kml)
