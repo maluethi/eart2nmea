@@ -4,9 +4,11 @@ import cgi
 import math as m
 
 import socket
-import pynmea2 as nm
 from datetime import datetime as dt
 import logging
+
+from functools import reduce
+import operator
 
 def to_gm(val):
    val = abs(val)
@@ -19,17 +21,17 @@ def to_gm(val):
 def calc_lat(decimal):
    sign = m.copysign(1, decimal)
    direction = 'N' if sign == 1 else 'S'
-   return to_gm(decimal), direction
+   return f"{to_gm(decimal)},{direction}"
 
 
 def calc_lon(decimal):
    sign = m.copysign(1, decimal)
    direction = 'E' if sign == 1 else 'W'
-   return to_gm(decimal), direction
+   return f"{to_gm(decimal)},{direction}"
 
 
 def calc_alt(alt):
-   return f'{alt:.2f}', 'M'
+   return f'{alt:.2f},M'
 
 
 def calc_head(head):
@@ -37,6 +39,10 @@ def calc_head(head):
       return f'{head:.2f}'
    elif head < 0:
       return f'{360 + head:.2f}'
+
+
+def checksum(nmea_string):
+   return reduce(operator.xor, map(ord, nmea_string), 0)
 
 
 url = cgi.FieldStorage()
@@ -73,17 +79,18 @@ addr = ('localhost', 10110)
 timestamp = dt.now().strftime("%H%M%S")
 date = dt.now().strftime("%d%m%y")
 
-data = (str(timestamp), 'A', *calc_lat(lat), *calc_lon(lon), "40.0", calc_head(head), date, "1.2", "E", "S")
+nmea_pos = f"GPRMC,{timestamp},A,{calc_lat(lat)},{calc_lon(lon)},40.0,{calc_head(head)},{date},1.2,E,S"
+nmea_pos_string = f"${nmea_pos}*{checksum(nmea_pos):>02x}\n"
 
-nmea_pos = nm.GGA('GP', 'RMC', data)
-nmea_alt = nm.GGA('PG', 'RMZ', (calc_alt(alt)))
+nmea_altt = f"PGRMZ,{calc_alt(alt)}"
+nmea_alt_string = f"${nmea_altt}*{checksum(nmea_altt):>02x}\n"
 
-logging.debug(f"pos: {nmea_pos}")
-logging.debug(f"alt: {nmea_alt}")
+logging.debug(f"pos  : {nmea_pos}")
+logging.debug(f'       {nmea_alt_string}')
 
 try:
-   df_pos = (str(nmea_pos) + '\n').encode()
-   df_alt = (str(nmea_alt) + '\n').encode()
+   df_pos = nmea_pos_string.encode()
+   df_alt = nmea_alt_string.encode()
 except Exception as e:
    logging.debug(f"unable to encode alt/pos")
    raise Exception("encoding issue")
