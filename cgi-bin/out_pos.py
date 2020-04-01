@@ -10,39 +10,40 @@ import logging
 from functools import reduce
 import operator
 
+
 def to_gm(val):
-   val = abs(val)
-   hh = m.floor(val)
-   mm = (val - hh) * 60
-   val = 100 * hh + mm
-   return f'{val:>08.4f}'
+    val = abs(val)
+    hh = m.floor(val)
+    mm = (val - hh) * 60
+    val = 100 * hh + mm
+    return f'{val:>08.4f}'
 
 
 def calc_lat(decimal):
-   sign = m.copysign(1, decimal)
-   direction = 'N' if sign == 1 else 'S'
-   return f"{to_gm(decimal)},{direction}"
+    sign = m.copysign(1, decimal)
+    direction = 'N' if sign == 1 else 'S'
+    return f"{to_gm(decimal)},{direction}"
 
 
 def calc_lon(decimal):
-   sign = m.copysign(1, decimal)
-   direction = 'E' if sign == 1 else 'W'
-   return f"{to_gm(decimal)},{direction}"
+    sign = m.copysign(1, decimal)
+    direction = 'E' if sign == 1 else 'W'
+    return f"{to_gm(decimal)},{direction}"
 
 
 def calc_alt(alt):
-   return f'{alt:.2f},M'
+    return f'{alt:.2f},M'
 
 
 def calc_head(head):
-   if head > 0:
-      return f'{head:.2f}'
-   elif head < 0:
-      return f'{360 + head:.2f}'
+    if head > 0:
+        return f'{head:.2f}'
+    elif head < 0:
+        return f'{360 + head:.2f}'
 
 
 def checksum(nmea_string):
-   return reduce(operator.xor, map(ord, nmea_string), 0)
+    return reduce(operator.xor, map(ord, nmea_string), 0)
 
 
 url = cgi.FieldStorage()
@@ -62,16 +63,16 @@ head = float(view[1])
 
 # TODO: Remove unnecessary point that is sent back to google earth
 kml = (
-   '<?xml version="1.0" encoding="UTF-8"?>\n'
-   '<kml xmlns="http://www.opengis.net/kml/2.2">\n'
-   '<Placemark>\n'
-   '<name>View-centered placemark</name>\n'
-   '<Point>\n'
-   '<coordinates>%.6f,%.6f</coordinates>\n'
-   '</Point>\n'
-   '</Placemark>\n'
-   '</kml>'
-   ) %(0, 0)
+          '<?xml version="1.0" encoding="UTF-8"?>\n'
+          '<kml xmlns="http://www.opengis.net/kml/2.2">\n'
+          '<Placemark>\n'
+          '<name>View-centered placemark</name>\n'
+          '<Point>\n'
+          '<coordinates>%.6f,%.6f</coordinates>\n'
+          '</Point>\n'
+          '</Placemark>\n'
+          '</kml>'
+      ) % (0, 0)
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 addr = ('localhost', 10110)
@@ -89,18 +90,17 @@ logging.debug(f"pos  : {nmea_pos}")
 logging.debug(f'       {nmea_alt_string}')
 
 try:
-   df_pos = nmea_pos_string.encode()
-   df_alt = nmea_alt_string.encode()
+    df_pos = nmea_pos_string.encode()
+    df_alt = nmea_alt_string.encode()
 except Exception as e:
-   logging.debug(f"unable to encode alt/pos")
-   raise Exception("encoding issue")
+    logging.debug(f"unable to encode alt/pos")
+    raise Exception("encoding issue")
 try:
-   sock.sendto(df_pos, addr)
-   sock.sendto(df_alt, addr)
+    sock.sendto(df_pos, addr)
+    sock.sendto(df_alt, addr)
 except Exception as e:
-   logging.debug(f"unable to send alt/pos")
-   raise Exception("sending issue")
-
+    logging.debug(f"unable to send alt/pos")
+    raise Exception("sending issue")
 
 print("Content-Type: application/vnd.google-earth.kml+xml\n")
 print(kml)
