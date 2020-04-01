@@ -1,4 +1,4 @@
-#!/home/maluethi/bin/miniconda3/envs/erth2nmea/bin/python
+#!/usr/bin/env
 
 import cgi
 import zmq

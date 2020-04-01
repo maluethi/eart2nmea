@@ -6,14 +6,14 @@
     <open>0</open>
     <description>Outputs the current camera location to a local webserver</description>
     <NetworkLink>
-      <name>Position Output</name>
+      <name>Network Link</name>
       <visibility>0</visibility>
       <open>0</open>
       <description>Every second a cgi script is called with the camera position and heading.</description>
       <refreshVisibility>0</refreshVisibility>
       <flyToView>0</flyToView>
       <Link>
-        <href>http://0.0.0.0:8000/cgi-bin/to_serial.py</href>
+        <href>http://0.0.0.0:8000/cgi-bin/out_pos.py</href>
 	    <refreshMode>onInterval</refreshMode>
 	    <refreshInterval>1</refreshInterval>
 	    <viewRefreshMode>onStop</viewRefreshMode>
