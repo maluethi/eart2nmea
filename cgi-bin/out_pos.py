@@ -48,7 +48,8 @@ def checksum(nmea_string):
 
 url = cgi.FieldStorage()
 
-logging.basicConfig(filename='cgi.log', level=logging.DEBUG)
+# put the level to DEBUG for output
+logging.basicConfig(filename='cgi.log', level=logging.CRITICAL)
 
 camera = url['CAMERA'].value
 camera = camera.split(',')
