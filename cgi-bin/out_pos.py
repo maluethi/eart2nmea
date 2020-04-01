@@ -62,19 +62,6 @@ view = view.split(',')
 tilt = float(view[0])
 head = float(view[1])
 
-# TODO: Remove unnecessary point that is sent back to google earth
-kml = (
-          '<?xml version="1.0" encoding="UTF-8"?>\n'
-          '<kml xmlns="http://www.opengis.net/kml/2.2">\n'
-          '<Placemark>\n'
-          '<name>View-centered placemark</name>\n'
-          '<Point>\n'
-          '<coordinates>%.6f,%.6f</coordinates>\n'
-          '</Point>\n'
-          '</Placemark>\n'
-          '</kml>'
-      ) % (0, 0)
-
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 addr = ('localhost', 10110)
 
@@ -102,6 +89,12 @@ try:
 except Exception as e:
     logging.debug(f"unable to send alt/pos")
     raise Exception("sending issue")
+
+kml = (
+          '<?xml version="1.0" encoding="UTF-8"?>\n'
+          '<kml xmlns="http://www.opengis.net/kml/2.2">\n'
+          '</kml>'
+    )
 
 print("Content-Type: application/vnd.google-earth.kml+xml\n")
 print(kml)
