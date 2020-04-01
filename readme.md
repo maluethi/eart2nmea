@@ -1,6 +1,6 @@
 A little script to fuse [google earth pro][1] (desktop edition) and [xcsoar][2] together.
 
-![demot_image](https://imgur.com/JarFK2fl.png)
+![demot_image](https://imgur.com/JarFK2f.png)
 
 ## Experimental Installation and Usage
 1. The script has no external dependencies, it was written for python3.*
