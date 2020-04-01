@@ -1,22 +1,58 @@
-#!/usr/bin/env
+#!/home/maluethi/bin/miniconda3/envs/erth2nmea/bin/python
 
 import cgi
-import zmq
+import math as m
+
+import socket
+import pynmea2 as nm
+from datetime import datetime as dt
+
+
+def to_gm(val):
+   hh = m.floor(val)
+   mm = (val - hh) * 60
+   return hh, mm
+
+
+def calc_lat(decimal):
+   sign = m.copysign(1, decimal)
+   direction = 'N' if sign == 1 else 'S'
+   hh, mm = to_gm(abs(decimal))
+   return f'{hh}{mm:.4f}', direction
+
+
+def calc_lon(decimal):
+   sign = m.copysign(1, decimal)
+   direction = 'E' if sign == 1 else 'W'
+   hh, mm = to_gm(abs(decimal))
+   return f'{hh:0>3}{mm:.4f}', direction
+
+
+def calc_alt(alt):
+   return f'{alt:.2f}', 'M'
+
+
+def calc_head(head):
+   if head > 0:
+      return f'{head:.2f}'
+   elif head < 0:
+      return f'{360 + head:.2f}'
 
 url = cgi.FieldStorage()
 
 camera = url['CAMERA'].value
 camera = camera.split(',')
-lat = camera[0]
-lon = camera[1]
-alt = camera[2]
+lat = float(camera[1])
+lon = float(camera[0])
+alt = float(camera[2])
 
 view = url['VIEW'].value
 view = view.split(',')
-tilt = view[0]
-heading = view[1]
+tilt = float(view[0])
+head = float(view[1])
 
-kml = ( 
+# TODO: Remove unnecessary point that is sent back to google earth
+kml = (
    '<?xml version="1.0" encoding="UTF-8"?>\n'
    '<kml xmlns="http://www.opengis.net/kml/2.2">\n'
    '<Placemark>\n'
@@ -28,11 +64,28 @@ kml = (
    '</kml>'
    ) %(0, 0)
 
+sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+addr = ('localhost', 10110)
+
+timestamp = dt.now().strftime("%H%M%S")
+date = dt.now().strftime("%d%m%y")
+
+data = (str(timestamp), 'A', *calc_lat(lat), *calc_lon(lon), "40.0", calc_head(head), date, "1.2", "E", "S")
+
+nmea_pos = nm.GGA('GP', 'RMC', data)
+nmea_alt = nm.GGA('PG', 'RMZ', (calc_alt(alt)))
+
+try:
+   df_pos = (str(nmea_pos) + '\n').encode()
+   df_alt = (str(nmea_alt) + '\n').encode()
+except Exception as e:
+   exit()
+
+try:
+   sock.sendto(df_pos, addr)
+   sock.sendto(df_alt, addr)
+except Exception as e:
+   exit()
+
 print("Content-Type: application/vnd.google-earth.kml+xml\n")
 print(kml)
-
-context = zmq.Context()
-sender = context.socket(zmq.PUSH)
-
-sender.bind('ipc:///tmp/earth.pipe')
-sender.send_string(f'{lat},{lon},{alt},{heading}')
