@@ -57,10 +57,8 @@ lat = float(camera[1])
 lon = float(camera[0])
 alt = float(camera[2])
 
-view = url['VIEW'].value
-view = view.split(',')
-tilt = float(view[0])
-head = float(view[1])
+tilt = float(camera[3])
+head = float(camera[4])
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 addr = ('localhost', 10110)

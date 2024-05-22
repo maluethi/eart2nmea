@@ -18,7 +18,7 @@
 	    <refreshInterval>1</refreshInterval>
 	    <viewRefreshMode>onStop</viewRefreshMode>
     	<viewRefreshTime>7</viewRefreshTime>
-	    <viewFormat>CAMERA=[cameraLon],[cameraLat],[cameraAlt];VIEW=[lookatTilt],[lookatHeading]</viewFormat>
+	    <viewFormat>CAMERA=[cameraLon],[cameraLat],[cameraAlt],[lookatTilt],[lookatHeading]</viewFormat>
       </Link>
     </NetworkLink>
   </Folder>
